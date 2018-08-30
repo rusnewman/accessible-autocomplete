@@ -55,6 +55,8 @@ export default class Autocomplete extends Component {
     showNoOptionsFound: true,
     showAllValues: false,
     required: false,
+    multiple: false,
+    selectedOptions: {},
     tNoResults: () => 'No results found',
     dropdownArrow: DropdownArrowDown
   }
@@ -70,6 +72,7 @@ export default class Autocomplete extends Component {
       clicked: null,
       menuOpen: false,
       options: props.defaultValue ? [props.defaultValue] : [],
+      selectedOptions: props.selectedOptions ? [props.selectedOptions] : [],
       query: props.defaultValue,
       selected: null
     }
@@ -87,6 +90,8 @@ export default class Autocomplete extends Component {
     this.handleOptionClick = this.handleOptionClick.bind(this)
     this.handleOptionFocus = this.handleOptionFocus.bind(this)
     this.handleOptionMouseEnter = this.handleOptionMouseEnter.bind(this)
+
+    this.handleSelectedOptionClick = this.handleSelectedOptionClick.bind(this)
 
     this.handleInputBlur = this.handleInputBlur.bind(this)
     this.handleInputChange = this.handleInputChange.bind(this)
@@ -280,6 +285,38 @@ export default class Autocomplete extends Component {
       query: newQuery,
       selected: -1
     })
+    if (this.props.selectElement.multiple) {
+      this.updateMultiselect(selectedOption)
+    }
+    this.forceUpdate()
+  }
+
+  updateMultiselect (selectedOption) {
+    // Update select state for option
+    const addedSelectOption = [].filter.call(this.props.selectElement.options, option => option.textContent === selectedOption)[0]
+    if (addedSelectOption) { addedSelectOption.setAttribute('selected', '') }
+
+    // Update multiselect list
+    let availableOptions = [].filter.call(this.props.selectElement.options, option => option.textContent)
+    this.props.selectedOptions = availableOptions.filter(option => option.hasAttribute('selected'))
+
+    // Reset input state
+    this.setState({
+      menuOpen: false,
+      selected: null,
+      query: ''
+    })
+  }
+
+  handleSelectedOptionClick (event, index) {
+    // Remove from the list
+    const removedOption = this.props.selectedOptions[index]
+    this.props.selectedOptions = this.props.selectedOptions.filter(e => e !== removedOption)
+
+    // Update select state for option
+    const removedSelectOption = [].filter.call(this.props.selectElement.options, option => option.textContent === removedOption.textContent)[0]
+    if (removedSelectOption) { removedSelectOption.removeAttribute('selected') }
+
     this.forceUpdate()
   }
 
@@ -392,6 +429,7 @@ export default class Autocomplete extends Component {
       name,
       placeholder,
       required,
+      multiple,
       showAllValues,
       tNoResults,
       tStatusQueryTooShort,
@@ -425,6 +463,8 @@ export default class Autocomplete extends Component {
     const menuModifierVisibility = `${menuClassName}--${(menuIsVisible) ? 'visible' : 'hidden'}`
 
     const optionClassName = `${cssNamespace}__option`
+
+    const selectedOptionsClassName = `${cssNamespace}__list`
 
     const hintClassName = `${cssNamespace}__hint`
     const selectedOptionText = this.templateInputValue(options[selected])
@@ -518,6 +558,38 @@ export default class Autocomplete extends Component {
             <li className={`${optionClassName} ${optionClassName}--no-results`}>{tNoResults()}</li>
           )}
         </ul>
+
+        {multiple && (
+          <ul
+            className={`${selectedOptionsClassName}`}
+            id={`${id}__list`}
+            role='listbox'
+          >
+            {this.props.selectedOptions.map((option, index) => {
+              const showFocused = focused === -1 ? selected === index : focused === index
+              const optionModifierFocused = showFocused && hovered === null ? ` ${optionClassName}--focused` : ''
+              const optionModifierOdd = (index % 2) ? ` ${optionClassName}--odd` : ''
+
+              return (
+                <li
+                  aria-selected={focused === index}
+                  className={`${optionClassName}${optionModifierFocused}${optionModifierOdd}`}
+                  dangerouslySetInnerHTML={{ __html: `<span class='autocomplete__option-item'><a href='#remove-${option.value}'>&times;</a> ` + this.templateSuggestion(option.textContent) + '</span>' }}
+                  id={`${id}__option--${index}`}
+                  key={index}
+                  onClick={(event) => this.handleSelectedOptionClick(event, index)}
+                  ref={(optionEl) => { this.elementReferences[index] = optionEl }}
+                  role='option'
+                  tabIndex='-1'
+                />
+              )
+            })}
+
+            {showNoOptionsFound && (
+              <li className={`${optionClassName} ${optionClassName}--no-results`}>{tNoResults()}</li>
+            )}
+          </ul>
+        )}
       </div>
     )
   }
