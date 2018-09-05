@@ -301,20 +301,22 @@ export default class Autocomplete extends Component {
   }
 
   updateMultiselect (selectedOption) {
-    // Update select state for option
-    const addedSelectOption = [].filter.call(this.props.selectElement.options, option => option.textContent === selectedOption)[0]
-    if (addedSelectOption) { addedSelectOption.setAttribute('selected', '') }
+    if (selectedOption) {
+      // Update select state for option
+      const addedSelectOption = [].filter.call(this.props.selectElement.options, option => option.textContent === selectedOption)[0]
+      if (addedSelectOption) { addedSelectOption.setAttribute('selected', '') }
 
-    // Update multiselect list
-    let availableOptions = [].filter.call(this.props.selectElement.options, option => option.textContent)
-    this.props.selectedOptions = availableOptions.filter(option => option.hasAttribute('selected'))
+      // Update multiselect list
+      let availableOptions = [].filter.call(this.props.selectElement.options, option => option.textContent)
+      this.props.selectedOptions = availableOptions.filter(option => option.hasAttribute('selected'))
 
-    // Reset input state
-    this.setState({
-      menuOpen: false,
-      selected: null,
-      query: ''
-    })
+      // Reset input state
+      this.setState({
+        menuOpen: false,
+        selected: null,
+        query: ''
+      })
+    }
   }
 
   handleSelectedOptionClick (event, index) {
@@ -583,7 +585,7 @@ export default class Autocomplete extends Component {
                 <li
                   aria-selected={focused === index}
                   className={`${optionClassName}${optionModifierFocused}${optionModifierOdd}`}
-                  dangerouslySetInnerHTML={{ __html: `<span class='autocomplete__option-item'><a href='#remove-${option.value}'>&times;</a> ` + this.templateSuggestion(option.textContent) + '</span>' }}
+                  dangerouslySetInnerHTML={{ __html: `<button class="autocomplete__remove-option">&times;</button> ` + this.templateSuggestion(option.textContent) }}
                   id={`${id}__option--${index}`}
                   key={index}
                   onClick={(event) => this.handleSelectedOptionClick(event, index)}
