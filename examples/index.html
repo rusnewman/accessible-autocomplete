@@ -513,7 +513,9 @@
     <script type="text/javascript">
       element = document.querySelector('#multiselect-autocomplete-progressiveEnhancement')
       accessibleAutocomplete.enhanceSelectElement({
+        minLength: 3,
         selectElement: element,
+        showNoOptionsFound: false,
         multiple: true
       })
     </script>
